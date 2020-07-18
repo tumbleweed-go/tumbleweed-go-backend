@@ -4,9 +4,9 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+let indexRouter = require('./routes/index');
 let tumbleweedUploadRouter = require('./routes/tumbleweed/upload');
 let tumbleweedGetRouter = require('./routes/tumbleweed/get');
-//let tumbleweedDetectRouter = require('./routes/tumbleweed/detect');
 
 var app = express();
 
@@ -20,6 +20,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/', indexRouter);
 app.use('/tumbleweed/upload', tumbleweedUploadRouter);
 app.use('/tumbleweed/get', tumbleweedGetRouter);
 //app.use('/tumbleweed/detect', tumbleweedDetectRouter);
