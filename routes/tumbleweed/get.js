@@ -3,6 +3,13 @@ const router = express.Router();
 
 const fb = require('./../../utils/firebase');
 
+// Enable CORS.
+router.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
 router.get('/', async (req, res, next) => {
 
   let promise = new Promise(resolve => {
