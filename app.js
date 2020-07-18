@@ -4,8 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+let tumbleweedUploadRouter = require('./routes/tumbleweed/upload');
+let tumbleweedGetRouter = require('./routes/tumbleweed/get');
 
 var app = express();
 
@@ -19,8 +19,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/tumbleweed/upload', tumbleweedUploadRouter);
+app.use('/tumbleweed/get', tumbleweedGetRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
