@@ -7,6 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('tumbleweed-go-backend:server');
 var http = require('http');
+var ip = require('ip');
 
 /**
  * Get port from environment and store in Express.
@@ -28,6 +29,8 @@ var server = http.createServer(app);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
+
+console.log(`\nhttp://${ip.address()}:8000\n`)
 
 /**
  * Normalize a port into a number, string, or false.

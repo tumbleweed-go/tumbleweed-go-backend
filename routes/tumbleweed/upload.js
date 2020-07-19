@@ -17,7 +17,7 @@ const isTumbleweedColour = (hsv) => {
 
   let range = {
     h: { low: 25, high: 45 },
-    s: { low: 45, high: 65 },
+    s: { low: 20, high: 65 },
     v: { low: 50, high: 80 }
   };
 
