@@ -1,5 +1,7 @@
 # Tumbleweed GO - API
 
+Built with [Express](http://expressjs.com/), [Firebase](https://firebase.google.com/), and [Google Vision AI](https://cloud.google.com/vision/).
+
 This repository communicates with the front-end and back-end of the Tumbleweed GO project.
 
 ## Endpoints
