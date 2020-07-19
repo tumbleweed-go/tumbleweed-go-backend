@@ -1,7 +1,24 @@
 const axios = require('axios');
 const firebase = require('firebase');
 
-const directionAngles = { E: 0, NE: Math.PI / 4, N: Math.PI / 2, NW: Math.PI * 3 / 4, W: Math.PI, SW: Math.PI * 5 / 4, S: Math.PI * 3 / 2, SE: Math.PI * 7 / 4 };
+const directionAngles = {
+  E:   Math.PI * 0 / 8,
+  ENE: Math.PI * 1 / 8,
+  NE:  Math.PI * 2 / 8,
+  NNE: Math.PI * 3 / 8,
+  N:   Math.PI * 4 / 8,
+  NNW: Math.PI * 5 / 8,
+  NW:  Math.PI * 6 / 8,
+  WNW: Math.PI * 7 / 8,
+  W:   Math.PI * 8 / 8,
+  WSW: Math.PI * 9 / 8,
+  SW:  Math.PI * 10 / 8,
+  SSW: Math.PI * 11 / 8,
+  S:   Math.PI * 12 / 8,
+  SSE: Math.PI * 13 / 8,
+  SE:  Math.PI * 14 / 8,
+  ESE: Math.PI * 15 / 8
+};
 
 const getPredictedLocations = async (latitude, longitude) => {
 
@@ -25,8 +42,6 @@ const getNextLocation = (locations, i, latitude, longitude, callback = null) => 
 
   axios.get(`https://api.weather.gov/points/${latitude},${longitude}/forecast`).then(res => {
 
-    console.log(latitude, longitude);
-
     let todayData = res.data.properties.periods[i];
     let windSpeedNumberMatches = todayData.windSpeed.match(/[\d.]+/g);
     
@@ -48,8 +63,6 @@ const getNextLocation = (locations, i, latitude, longitude, callback = null) => 
 
     // Add location to array, recurse.
     locations.push(new firebase.firestore.GeoPoint(latitude, longitude));
-
-    console.log('repeat');
     getNextLocation(locations, i + 2, latitude, longitude, callback);  // Increment by 2 because API counts by half-days.
 
   }).catch(err => {
