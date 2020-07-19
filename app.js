@@ -7,6 +7,7 @@ var logger = require('morgan');
 let indexRouter = require('./routes/index');
 let tumbleweedUploadRouter = require('./routes/tumbleweed/upload');
 let tumbleweedGetRouter = require('./routes/tumbleweed/get');
+let tumbleweedUpdateRouter = require('./routes/tumbleweed/update');
 
 var app = express();
 
@@ -23,7 +24,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/tumbleweed/upload', tumbleweedUploadRouter);
 app.use('/tumbleweed/get', tumbleweedGetRouter);
-//app.use('/tumbleweed/detect', tumbleweedDetectRouter);
+app.use('/tumbleweed/update', tumbleweedUpdateRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

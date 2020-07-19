@@ -6,6 +6,7 @@ const colorsys = require('colorsys');
 const firebase = require('firebase');
 
 const fb = require('./../../utils/firebase');
+const funcs = require('./../../utils/funcs');
 const upload = multer({ dest: './uploads' });
 
 // File upload fields for POST request.
@@ -108,11 +109,15 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
 
   // UPLOAD COORDINATES
 
+  let predictedLocations = await funcs.getPredictedLocations(latitude, longitude);
+
   let promise = new Promise(resolve => {
     // Add tumbleweed to firestore.
     fb.getFirestore(db => {
       db.collection('tumbleweeds').add({
-        location: new firebase.firestore.GeoPoint(latitude, longitude)
+        location: new firebase.firestore.GeoPoint(latitude, longitude),
+        predictedLocations: predictedLocations,
+        lastUpdateTime: Date.now()
       });
       // Finished.
       resolve();
