@@ -23,13 +23,15 @@ router.post('/', async (req, res, next) => {
           let data = doc.data();
           let updateElapsed = Date.now() - data.lastUpdateTime;
           // Update if last updated more than a day ago.
-          if (updateElapsed < 1000 * 60 * 60 * 24) {  // 1 day.
+          if (updateElapsed > 1000 * 60 * 60 * 24) {  // 1 day.
 
+            let newLocation = predictedLocations[1];  // Get the new location based on past predictions. Should be relatively accurate since the weather forecast is accurate for the given day.
             let predictedLocations = await funcs.getPredictedLocations(data.location._lat, data.location._long);
             
             db.collection('tumbleweeds').where('__name__', '==', id).get().then(function(querySnapshot) {
               querySnapshot.forEach(function(doc) {
                 doc.ref.update({
+                  location: newLocation,
                   predictedLocations: predictedLocations,
                   lastUpdateTime: Date.now()
                 });

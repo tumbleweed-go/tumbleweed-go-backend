@@ -72,9 +72,9 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
     return res.status(400).json({ result: 'Longitude out of range.' });
   }
 
-  // Round coordinates to 5 decimal places.
-  latitude = Math.round(latitude * 100000) / 100000;
-  longitude = Math.round(longitude * 100000) / 100000;
+  // Round coordinates to 7 decimal places.
+  latitude = Math.round(latitude * 10000000) / 10000000;
+  longitude = Math.round(longitude * 10000000) / 10000000;
 
   // IMAGE DETECTION
 

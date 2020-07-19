@@ -57,16 +57,20 @@ const getNextLocation = (locations, i, latitude, longitude, callback = null) => 
     let latitudeToMiles = 69.172;
     
     // Calculate tumbleweed movement.
-    // TODO: This calculation is for wind movement. Will be less for tumbleweeds.
-    longitude += Math.cos(windAngle) * windSpeed * 1 / longitudeToMiles;
-    latitude += Math.sin(windAngle) * windSpeed * 1 / latitudeToMiles;
+    let tumbleweedSpeedToWindSpeedRatio = 1;
+    longitude += Math.cos(windAngle) * windSpeed * 1 / longitudeToMiles * tumbleweedSpeedToWindSpeedRatio;
+    latitude += Math.sin(windAngle) * windSpeed * 1 / latitudeToMiles * tumbleweedSpeedToWindSpeedRatio;
+
+    // Round coordinates to 7 decimal places.
+    latitude = Math.round(latitude * 10000000) / 10000000;
+    longitude = Math.round(longitude * 10000000) / 10000000;
 
     // Add location to array, recurse.
     locations.push(new firebase.firestore.GeoPoint(latitude, longitude));
     getNextLocation(locations, i + 2, latitude, longitude, callback);  // Increment by 2 because API counts by half-days.
 
   }).catch(err => {
-    console.log(err);
+    console.log('axios error');
     callback();
     return;
   });
