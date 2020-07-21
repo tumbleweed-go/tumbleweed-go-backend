@@ -24,7 +24,7 @@ const getPredictedLocations = async (latitude, longitude) => {
 
   let array = [];
   let promise = new Promise(resolve => {
-    getNextLocation(array, 0, latitude, longitude, () => {
+    getNextPredictedLocation(array, 0, latitude, longitude, () => {
       resolve(array);
     });
   });
@@ -33,43 +33,58 @@ const getPredictedLocations = async (latitude, longitude) => {
   return array;
 }
 
-const getNextLocation = (locations, i, latitude, longitude, callback = null) => {
+const getNextPredictedLocation = (locations, period, latitude, longitude, callback = null) => {
 
-  if (i >= 12) { // Get locations for next 6 days.
+  if (period >= 12) { // Get locations for next 6 days.
     callback();
     return;
   }
 
-  axios.get(`https://api.weather.gov/points/${latitude},${longitude}/forecast`).then(res => {
+  axios.get(`https://api.weather.gov/points/${latitude},${longitude}`).then(async res => {
 
-    let todayData = res.data.properties.periods[i];
-    let windSpeedNumberMatches = todayData.windSpeed.match(/[\d.]+/g);
-    
-    // Get wind speed and wind angle.
-    let windAngle = directionAngles[todayData.windDirection];
-    let windSpeed = 0;
-    windSpeedNumberMatches.forEach(speed => windSpeed += parseFloat(speed));
-    windSpeed /= windSpeedNumberMatches.length;
+    // Three attempts.
+    let endpoint = res.data.properties.forecast;
+    let attempt = new Promise((resolve, reject) => {
+      axios.get(endpoint).then(res => resolve(res.data)).catch(()=> {
+        axios.get(endpoint).then(res => resolve(res.data)).catch(()=> {
+          axios.get(endpoint).then(res => resolve(res.data)).catch(()=> {
+            reject();
+          });
+        });
+      });
+    });
 
-    // Get latitude and longitude lengths (relative to mile). Note that longitude changes depending on latitude.
-    // MAYBE TO DO: fix longitude conversion (less accurate if going NW / SW / etc.)
-    let longitudeToMiles = Math.cos(latitude * Math.PI / 180) * 69.172;
-    let latitudeToMiles = 69.172;
-    
-    // Calculate tumbleweed movement.
-    let tumbleweedSpeedToWindSpeedRatio = 1;
-    longitude += Math.cos(windAngle) * windSpeed * 1 / longitudeToMiles * tumbleweedSpeedToWindSpeedRatio;
-    latitude += Math.sin(windAngle) * windSpeed * 1 / latitudeToMiles * tumbleweedSpeedToWindSpeedRatio;
+    await attempt.then(res => {
 
-    // Round coordinates to 7 decimal places.
-    latitude = Math.round(latitude * 10000000) / 10000000;
-    longitude = Math.round(longitude * 10000000) / 10000000;
+      let todayData = res.properties.periods[period];
+      let windSpeedNumberMatches = todayData.windSpeed.match(/[\d.]+/g);
+      
+      // Get wind speed and wind angle.
+      let windAngle = directionAngles[todayData.windDirection];
+      let windSpeed = 0;
+      windSpeedNumberMatches.forEach(speed => windSpeed += parseFloat(speed));
+      windSpeed /= windSpeedNumberMatches.length;
+  
+      // Get latitude and longitude lengths (relative to mile). Note that longitude changes depending on latitude.
+      // MAYBE TO DO: fix longitude conversion (less accurate if going NW / SW / etc.)
+      let longitudeToMiles = Math.cos(latitude * Math.PI / 180) * 69.172;
+      let latitudeToMiles = 69.172;
+      
+      // Calculate tumbleweed movement.
+      let tumbleweedSpeedToWindSpeedRatio = 1;
+      longitude += Math.cos(windAngle) * windSpeed * 1 / longitudeToMiles * tumbleweedSpeedToWindSpeedRatio;
+      latitude += Math.sin(windAngle) * windSpeed * 1 / latitudeToMiles * tumbleweedSpeedToWindSpeedRatio;
+  
+      // Round coordinates to 7 decimal places.
+      latitude = Math.round(latitude * 10000000) / 10000000;
+      longitude = Math.round(longitude * 10000000) / 10000000;
+  
+      // Add location to array, recurse.
+      locations.push(new firebase.firestore.GeoPoint(latitude, longitude));
+      getNextPredictedLocation(locations, period + 2, latitude, longitude, callback);  // Increment by 2 because API counts by half-days.
 
-    // Add location to array, recurse.
-    locations.push(new firebase.firestore.GeoPoint(latitude, longitude));
-    getNextLocation(locations, i + 2, latitude, longitude, callback);  // Increment by 2 because API counts by half-days.
-
-  }).catch(err => {
+    });
+  }).catch(() => {
     console.log('axios error');
     callback();
     return;
