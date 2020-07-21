@@ -1,5 +1,7 @@
 const axios = require('axios');
 const firebase = require('firebase');
+const vision = require('@google-cloud/vision');
+const colorsys = require('colorsys');
 
 const directionAngles = {
   E:   Math.PI * 0 / 8,
@@ -35,7 +37,7 @@ const getPredictedLocations = async (latitude, longitude) => {
 
 const getNextPredictedLocation = (locations, period, latitude, longitude, callback = null) => {
 
-  if (period >= 12) { // Get locations for next 6 days.
+  if (period >= 14) { // Get locations for next 7 days.
     callback();
     return;
   }
@@ -91,4 +93,46 @@ const getNextPredictedLocation = (locations, period, latitude, longitude, callba
   });
 }
 
-module.exports = { getPredictedLocations };
+const isTumbleweedColour = (hsv) => {
+
+  let range = { h: { low: 25, high: 45 }, s: { low: 20, high: 65 }, v: { low: 50, high: 80 } };
+
+  if (hsv.h < range.h.low || hsv.h > range.h.high) {
+    return false;
+  }
+  if (hsv.s < range.s.low || hsv.s > range.s.high) {
+    return false;
+  }
+  if (hsv.v < range.v.low || hsv.v > range.v.high) {
+    return false;
+  }
+  return true;
+}
+
+const isATumbleweed = async (imgDir) => {
+
+  let isPlant = false;
+  let correctColour = false;
+
+  // Detect if image has plant.
+  let [ labelPropertiesResults ] = await new vision.ImageAnnotatorClient().labelDetection(imgDir);
+  let labels = labelPropertiesResults.labelAnnotations;
+  labels.forEach(label => {
+    if (label.description === 'Plant') {
+      isPlant = true;
+    }
+  });
+
+  // Detect if image is the correct colour.
+  let [ imagePropertiesResult ] = await new vision.ImageAnnotatorClient().imageProperties(imgDir);
+  let colours = imagePropertiesResult.imagePropertiesAnnotation.dominantColors.colors;
+  if (colours.length > 0) {  // Only check the first colour (the most prominent one).
+    let rgb = colours[0].color;
+    let hsv = colorsys.rgb_to_hsv(rgb.red, rgb.green, rgb.blue);
+    correctColour = isTumbleweedColour(hsv);
+  }
+
+  return isPlant && correctColour;
+}
+
+module.exports = { getPredictedLocations, isATumbleweed };
