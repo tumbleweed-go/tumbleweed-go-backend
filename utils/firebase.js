@@ -12,7 +12,7 @@ const config = {
 
 let fb = null;
 
-const getFirestore = (callback = null) => {
+const getFirestore = (callback = (() => {})) => {
   if (fb) {
     callback(fb.firestore());
     return
@@ -23,4 +23,15 @@ const getFirestore = (callback = null) => {
   }
 }
 
-module.exports = { getFirestore };
+const getTumbleweedById = (id, callback = (() => {}), failCallback = (() => {})) => {
+  getFirestore(db => {
+    db.collection('tumbleweeds').where('__name__', '==', id).get().then((querySnapshot) => {
+      querySnapshot.forEach(doc => {    // Should only run once
+        callback(doc);
+      });
+      failCallback();  // Runs if no querySnapshot.
+    });
+  });
+}
+
+module.exports = { getFirestore, getTumbleweedById };

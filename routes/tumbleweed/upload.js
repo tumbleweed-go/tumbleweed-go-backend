@@ -62,23 +62,31 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
 
   // UPLOAD COORDINATES
 
-  let predictedLocations = await funcs.getPredictedLocations(latitude, longitude);
-
   let promise = new Promise(resolve => {
     // Add tumbleweed to firestore.
     fb.getFirestore(db => {
       db.collection('tumbleweeds').add({
         location: new firebase.firestore.GeoPoint(latitude, longitude),
-        predictedLocations: predictedLocations,
-        lastUpdateTime: Date.now()
+        lastUpdateTime: Date.now(),
+        predictedLocations: []  // Will be updated right after returning request.
+      }).then(docRef => {
+        // Finished. Resolve with added element's id.
+        resolve(docRef.id);
       });
-      // Finished.
-      resolve();
     });
   });
 
-  await promise.then(() => {
-    return res.status(200).json({ result: 'Tumbleweed added successfully.' });
+  await promise.then(async (id) => {
+    // Tumbleweed added. DO NOT end function at this point.
+    res.status(200).json({ result: 'Tumbleweed added successfully.' });
+
+    // Update tumbleweed predictions.
+    let predictedLocations = await funcs.getPredictedLocations(latitude, longitude);
+    fb.getTumbleweedById(id, doc => {
+      doc.ref.update({
+        predictedLocations: predictedLocations
+      });
+    });
   });
 });
 

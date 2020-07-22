@@ -17,26 +17,24 @@ router.post('/', async (req, res, next) => {
     // Get tumbleweeds from firestore.
     fb.getFirestore(db => {
       db.collection('tumbleweeds').get().then(snapshot => {
-        snapshot.forEach(async doc => {  // snapshot.map() doesn't exist. Using forEach() instead.
+        snapshot.forEach(async docRef => {  // snapshot.map() doesn't exist. Using forEach() instead.
           // Get Data.
-          let id = doc.id;
-          let data = doc.data();
+          let id = docRef.id;
+          let data = docRef.data();
           let updateElapsed = Date.now() - data.lastUpdateTime;
           // Update if last updated more than a day ago.
           if (updateElapsed > 1000 * 60 * 60 * 24) {  // 1 day.
 
             let newLocation = predictedLocations[1];  // Get the new location based on past predictions. Should be relatively accurate since the weather forecast is accurate for the given day.
             let predictedLocations = await funcs.getPredictedLocations(data.location._lat, data.location._long);
-            
-            db.collection('tumbleweeds').where('__name__', '==', id).get().then(function(querySnapshot) {
-              querySnapshot.forEach(function(doc) {
-                doc.ref.update({
-                  location: newLocation,
-                  predictedLocations: predictedLocations,
-                  lastUpdateTime: Date.now()
-                });
+
+            fb.getTumbleweedById(id, doc => {
+              doc.ref.update({
+                location: newLocation,
+                predictedLocations: predictedLocations,
+                lastUpdateTime: Date.now()
               });
-            })
+            });
           }
         });
         // Finished.
