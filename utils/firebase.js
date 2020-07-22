@@ -26,7 +26,7 @@ const getFirestore = (callback = (() => {})) => {
 const getTumbleweedById = (id, callback = (() => {}), failCallback = (() => {})) => {
   getFirestore(db => {
     db.collection('tumbleweeds').where('__name__', '==', id).get().then((querySnapshot) => {
-      querySnapshot.forEach(doc => {    // Should only run once
+      querySnapshot.forEach(doc => {    // Should only run once.
         callback(doc);
       });
       failCallback();  // Runs if no querySnapshot.

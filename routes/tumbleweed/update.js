@@ -17,34 +17,51 @@ router.post('/', async (req, res, next) => {
     // Get tumbleweeds from firestore.
     fb.getFirestore(db => {
       db.collection('tumbleweeds').get().then(snapshot => {
-        snapshot.forEach(async docRef => {  // snapshot.map() doesn't exist. Using forEach() instead.
+        // Loop through all tumbleweeds.
+        let docsLeft = snapshot.size;
+        snapshot.forEach(async docRef => {
           // Get Data.
           let id = docRef.id;
           let data = docRef.data();
           let updateElapsed = Date.now() - data.lastUpdateTime;
-          // Update if last updated more than a day ago.
-          if (updateElapsed > 1000 * 60 * 60 * 24) {  // 1 day.
-
-            let newLocation = predictedLocations[1];  // Get the new location based on past predictions. Should be relatively accurate since the weather forecast is accurate for the given day.
-            let predictedLocations = await funcs.getPredictedLocations(data.location._lat, data.location._long);
-
+          let dayElapsedTime = 1000 * 60 * 60 * 24;
+          // Update at most every 24 hrs.
+          if (updateElapsed > dayElapsedTime) {
+            // Get new location and new predicted locations.
+            let newLocation = data.location;
+            if (data.predictedLocations.length >= 1) {
+              newLocation = data.predictedLocations[0];
+            }
+            let predictedLocations = await funcs.getPredictedLocations(newLocation._lat, newLocation._long);
+            // Update tumbleweed in database.
             fb.getTumbleweedById(id, doc => {
               doc.ref.update({
                 location: newLocation,
                 predictedLocations: predictedLocations,
                 lastUpdateTime: Date.now()
+              }).then(() => {
+                // Resolve if all tumbleweeds were processed.
+                docsLeft--;
+                if (docsLeft === 0) {
+                  resolve();
+                }
               });
             });
           }
+          else {
+            // Resolve if all tumbleweeds were processed.
+            docsLeft--;
+            if (docsLeft === 0) {
+              resolve();
+            }
+          }
         });
-        // Finished.
-        resolve();
       });
     });
   });
 
   await promise.then(() => {
-    return res.status(200).send({ result: 'success' });
+    res.status(200).send({ result: 'success' });
   });
 });
 

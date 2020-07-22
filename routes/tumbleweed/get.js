@@ -25,7 +25,7 @@ router.get('/', async (req, res, next) => {
   });
 
   await promise.then(found => {
-    return res.status(200).send({ result: found });
+    res.status(200).send({ result: found });
   });
 });
 

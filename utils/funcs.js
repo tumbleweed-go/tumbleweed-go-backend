@@ -47,9 +47,9 @@ const getNextPredictedLocation = (locations, period, latitude, longitude, callba
     // Three attempts.
     let endpoint = res.data.properties.forecast;
     let attempt = new Promise((resolve, reject) => {
-      axios.get(endpoint).then(res => resolve(res.data)).catch(()=> {
-        axios.get(endpoint).then(res => resolve(res.data)).catch(()=> {
-          axios.get(endpoint).then(res => resolve(res.data)).catch(()=> {
+      axios.get(endpoint).then(res => resolve(res.data)).catch(() => {
+        axios.get(endpoint).then(res => resolve(res.data)).catch(() => {
+          axios.get(endpoint).then(res => resolve(res.data)).catch(() => {
             reject();
           });
         });
