@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const fb = require('./../../utils/firebase');
+const logger = require('./../../utils/log');
 const funcs = require('./../../utils/funcs');
 
 // Enable CORS.
@@ -14,6 +15,7 @@ router.use((req, res, next) => {
 router.post('/', async (req, res, next) => {
 
   let promise = new Promise(resolve => {
+    let updatedList = [];
     // Get tumbleweeds from firestore.
     fb.getFirestore(db => {
       db.collection('tumbleweeds').get().then(snapshot => {
@@ -40,10 +42,11 @@ router.post('/', async (req, res, next) => {
                 predictedLocations: predictedLocations,
                 lastUpdateTime: Date.now()
               }).then(() => {
+                updatedList.push(id);
                 // Resolve if all tumbleweeds were processed.
                 docsLeft--;
                 if (docsLeft === 0) {
-                  resolve();
+                  resolve(updatedList);
                 }
               });
             });
@@ -52,7 +55,7 @@ router.post('/', async (req, res, next) => {
             // Resolve if all tumbleweeds were processed.
             docsLeft--;
             if (docsLeft === 0) {
-              resolve();
+              resolve(updatedList);
             }
           }
         });
@@ -60,7 +63,8 @@ router.post('/', async (req, res, next) => {
     });
   });
 
-  await promise.then(() => {
+  await promise.then(updatedList => {
+    logger.log('/tumbleweed/update', `Updated tumbleweeds: ${JSON.stringify(updatedList)}`);
     res.status(200).send({ result: 'success' });
   });
 });

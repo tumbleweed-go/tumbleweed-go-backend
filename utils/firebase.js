@@ -15,7 +15,6 @@ let fb = null;
 const getFirestore = (callback = (() => {})) => {
   if (fb) {
     callback(fb.firestore());
-    return
   }
   else {
     fb = firebase.initializeApp(config);
