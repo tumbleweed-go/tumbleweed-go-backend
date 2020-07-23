@@ -68,6 +68,7 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
     fb.getFirestore(db => {
       db.collection('tumbleweeds').add({
         location: new firebase.firestore.GeoPoint(latitude, longitude),
+        uploadTime: Date.now(),
         lastUpdateTime: Date.now(),
         predictedLocations: []  // Will be updated right after returning request.
       }).then(docRef => {
