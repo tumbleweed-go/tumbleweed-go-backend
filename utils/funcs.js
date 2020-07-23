@@ -22,6 +22,14 @@ const directionAngles = {
   ESE: Math.PI * 15 / 8
 };
 
+const padNumber = (num, length) => {
+  var s = String(num);
+  while (s.length < length) {
+    s = '0' + s;
+  }
+  return s;
+}
+
 const getPredictedLocations = async (latitude, longitude) => {
 
   let array = [];
@@ -135,4 +143,4 @@ const isATumbleweed = async (imgDir) => {
   return isPlant && correctColour;
 }
 
-module.exports = { getPredictedLocations, isATumbleweed };
+module.exports = { getPredictedLocations, isATumbleweed, padNumber };

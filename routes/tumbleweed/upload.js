@@ -4,6 +4,7 @@ const multer = require('multer');
 const firebase = require('firebase');
 
 const fb = require('./../../utils/firebase');
+const logger = require('./../../utils/log');
 const funcs = require('./../../utils/funcs');
 const upload = multer({ dest: './uploads' });
 
@@ -78,6 +79,7 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
 
   await promise.then(async (id) => {
     // Tumbleweed added. DO NOT end function at this point.
+    logger.log('/tumbleweed/upload', `Uploaded tumbleweed: ${id}`);
     res.status(200).json({ result: 'Tumbleweed added successfully.' });
 
     // Update tumbleweed predictions.
@@ -85,6 +87,8 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
     fb.getTumbleweedById(id, doc => {
       doc.ref.update({
         predictedLocations: predictedLocations
+      }).then(() => {
+        logger.log('/tumbleweed/upload', `Updated tumbleweed predicted locations: ${id}`);
       });
     });
   });

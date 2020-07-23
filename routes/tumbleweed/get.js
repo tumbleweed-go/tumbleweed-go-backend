@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const fb = require('./../../utils/firebase');
+const logger = require('./../../utils/log');
 
 // Enable CORS.
 router.use((req, res, next) => {
@@ -25,6 +26,7 @@ router.get('/', async (req, res, next) => {
   });
 
   await promise.then(found => {
+    logger.log('/tumbleweed/get', `Retrieved tumbleweeds`);
     res.status(200).send({ result: found });
   });
 });
