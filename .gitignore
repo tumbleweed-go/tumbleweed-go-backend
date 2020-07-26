@@ -107,3 +107,5 @@ dist
 
 uploads/*
 _testData/
+
+firebase-credentials.json

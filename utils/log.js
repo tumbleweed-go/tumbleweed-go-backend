@@ -1,4 +1,4 @@
-const firebase = require('firebase');
+const firebase = require('firebase-admin');
 
 const fb = require('./firebase');
 const funcs = require('./funcs');
@@ -11,15 +11,11 @@ const getLogId = () => {
 
 const log = (path, msg) => {
 
-  let time = Math.floor(Date.now() / 1000);
-
-  fb.getFirestore(db => {
-    db.collection('logs').doc(getLogId()).set({
-      time: new firebase.firestore.Timestamp(time),
-      path: path,
-      message: msg
-    });
-  })
+  fb.firestore.collection('logs').doc(getLogId()).set({
+    time: firebase.firestore.FieldValue.serverTimestamp(),
+    path: path,
+    message: msg
+  });
 }
 
 module.exports = {log};

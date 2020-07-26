@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const firebase = require('firebase');
+const firebase = require('firebase-admin');
 
 const fb = require('./../../utils/firebase');
 const logger = require('./../../utils/log');
@@ -65,17 +65,15 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
 
   let promise = new Promise(resolve => {
     // Add tumbleweed to firestore.
-    fb.getFirestore(db => {
-      db.collection('tumbleweeds').add({
-        uploadTime: Date.now(),
-        uploadLocation: new firebase.firestore.GeoPoint(latitude, longitude),
-        location: new firebase.firestore.GeoPoint(latitude, longitude),
-        lastUpdateTime: Date.now(),
-        predictedLocations: []  // Will be updated right after returning request.
-      }).then(docRef => {
-        // Finished. Resolve with added element's id.
-        resolve(docRef.id);
-      });
+    fb.firestore.collection('tumbleweeds').add({
+      uploadTime: Date.now(),
+      uploadLocation: new firebase.firestore.GeoPoint(latitude, longitude),
+      location: new firebase.firestore.GeoPoint(latitude, longitude),
+      lastUpdateTime: Date.now(),
+      predictedLocations: []  // Will be updated right after returning request.
+    }).then(docRef => {
+      // Finished. Resolve with added element's id.
+      resolve(docRef.id);
     });
   });
 

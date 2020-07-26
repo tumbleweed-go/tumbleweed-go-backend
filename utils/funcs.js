@@ -1,5 +1,5 @@
 const axios = require('axios');
-const firebase = require('firebase');
+const firebase = require('firebase-admin');
 const vision = require('@google-cloud/vision');
 const colorsys = require('colorsys');
 

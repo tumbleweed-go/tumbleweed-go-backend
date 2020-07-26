@@ -15,13 +15,11 @@ router.get('/', async (req, res, next) => {
 
   let promise = new Promise(resolve => {
     // Get tumbleweeds from firestore.
-    fb.getFirestore(db => {
-      db.collection('tumbleweeds').get().then(snapshot => {
-        let found = [];
-        snapshot.forEach(doc => found.push(doc.data()));  // snapshot.map() doesn't exist. Using forEach() instead.
-        // Finished.
-        resolve(found);
-      });
+    fb.firestore.collection('tumbleweeds').get().then(snapshot => {
+      let found = [];
+      snapshot.forEach(doc => found.push(doc.data()));  // snapshot.map() doesn't exist. Using forEach() instead.
+      // Finished.
+      resolve(found);
     });
   });
 

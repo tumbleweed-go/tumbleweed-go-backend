@@ -1,36 +1,21 @@
-const firebase = require('firebase');
+const firebase = require('firebase-admin');
+const serviceAccount = require('./firebase-credentials.json');
 
-const config = {
-  apiKey: process.env.API_KEY,
-  authDomain: "tumbleweed-go.firebaseapp.com",
-  databaseURL: "https://tumbleweed-go.firebaseio.com",
-  projectId: "tumbleweed-go",
-  storageBucket: "tumbleweed-go.appspot.com",
-  messagingSenderId: "132451553649",
-  appId: "1:132451553649:web:dafeed78152385c486a6d0"
-};
+firebase.initializeApp({
+  credential: firebase.credential.cert(serviceAccount),
+  databaseURL: 'https://tumbleweed-go.firebaseio.com'
+});
 
-let fb = null;
-
-const getFirestore = (callback = (() => {})) => {
-  if (fb) {
-    callback(fb.firestore());
-  }
-  else {
-    fb = firebase.initializeApp(config);
-    callback(fb.firestore());
-  }
-}
+let firestore = firebase.firestore();
+let auth = firebase.auth();
 
 const getTumbleweedById = (id, callback = (() => {}), failCallback = (() => {})) => {
-  getFirestore(db => {
-    db.collection('tumbleweeds').where('__name__', '==', id).get().then((querySnapshot) => {
-      querySnapshot.forEach(doc => {    // Should only run once.
-        callback(doc);
-      });
-      failCallback();  // Runs if no querySnapshot.
+  firestore.collection('tumbleweeds').where('__name__', '==', id).get().then((querySnapshot) => {
+    querySnapshot.forEach(doc => {    // Should only run once.
+      callback(doc);
     });
+    failCallback();  // Runs if no querySnapshot.
   });
 }
 
-module.exports = { getFirestore, getTumbleweedById };
+module.exports = { firestore, auth, getTumbleweedById };
