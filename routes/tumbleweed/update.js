@@ -1,9 +1,43 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 
 const fb = require('./../../utils/firebase');
 const logger = require('./../../utils/log');
 const funcs = require('./../../utils/funcs');
+const upload = multer();
+
+const updateTumbleweedLocation = async (id, data, callback) => {
+  // Get new location and new predicted locations.
+  let newLocation = data.location;
+  if (data.predictedLocations.length >= 1) {
+    newLocation = data.predictedLocations[0];
+  }
+  let predictedLocations = await funcs.getPredictedLocations(newLocation._lat, newLocation._long);
+  // Update tumbleweed in database.
+  fb.getTumbleweedById(id, doc => {
+    doc.ref.update({
+      location: newLocation,
+      predictedLocations: predictedLocations,
+      lastUpdateTime: Date.now()
+    }).then(() => {
+      callback();
+    });
+  });
+}
+
+const refreshPredictedLocations = async (id, data, callback) => {
+  // Get new predicted locations.
+  let predictedLocations = await funcs.getPredictedLocations(data.location._lat, data.location._long);
+  // Update tumbleweed in database.
+  fb.getTumbleweedById(id, doc => {
+    doc.ref.update({
+      predictedLocations: predictedLocations,
+    }).then(() => {
+      callback();
+    });
+  });
+}
 
 // Enable CORS.
 router.use((req, res, next) => {
@@ -12,7 +46,9 @@ router.use((req, res, next) => {
   next();
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', upload.none(), async (req, res, next) => {
+
+  let forced = (req.body && req.body.forced === 'true') ? true : false;
 
   let promise = new Promise(resolve => {
     let updatedList = [];
@@ -28,32 +64,24 @@ router.post('/', async (req, res, next) => {
         let dayElapsedTime = 1000 * 60 * 60 * 24;
         // Update at most every 24 hrs.
         if (updateElapsed > dayElapsedTime) {
-          // Get new location and new predicted locations.
-          let newLocation = data.location;
-          if (data.predictedLocations.length >= 1) {
-            newLocation = data.predictedLocations[0];
-          }
-          let predictedLocations = await funcs.getPredictedLocations(newLocation._lat, newLocation._long);
-          // Update tumbleweed in database.
-          fb.getTumbleweedById(id, doc => {
-            doc.ref.update({
-              location: newLocation,
-              predictedLocations: predictedLocations,
-              lastUpdateTime: Date.now()
-            }).then(() => {
-              updatedList.push(id);
-              // Resolve if all tumbleweeds were processed.
-              docsLeft--;
-              if (docsLeft === 0) {
-                resolve(updatedList);
-              }
-            });
+          updateTumbleweedLocation(id, data, () => {
+            updatedList.push(id);
+            if (--docsLeft === 0) {
+              resolve(updatedList);
+            }
+          });
+        }
+        else if (forced) {
+          refreshPredictedLocations(id, data, () => {
+            updatedList.push(id);
+            console.log(id, docsLeft);
+            if (--docsLeft === 0) {
+              resolve(updatedList);
+            }
           });
         }
         else {
-          // Resolve if all tumbleweeds were processed.
-          docsLeft--;
-          if (docsLeft === 0) {
+          if (--docsLeft === 0) {
             resolve(updatedList);
           }
         }
