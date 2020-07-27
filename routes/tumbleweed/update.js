@@ -13,7 +13,7 @@ const updateTumbleweedLocation = async (id, data, callback) => {
   if (data.predictedLocations.length >= 1) {
     newLocation = data.predictedLocations[0];
   }
-  let predictedLocations = await funcs.getPredictedLocations(newLocation._lat, newLocation._long);
+  let predictedLocations = await funcs.getPredictedLocations(newLocation._latitude, newLocation._longitude);
   // Update tumbleweed in database.
   fb.getTumbleweedById(id, doc => {
     doc.ref.update({
@@ -28,7 +28,7 @@ const updateTumbleweedLocation = async (id, data, callback) => {
 
 const refreshPredictedLocations = async (id, data, callback) => {
   // Get new predicted locations.
-  let predictedLocations = await funcs.getPredictedLocations(data.location._lat, data.location._long);
+  let predictedLocations = await funcs.getPredictedLocations(data.location._latitude, data.location._longitude);
   // Update tumbleweed in database.
   fb.getTumbleweedById(id, doc => {
     doc.ref.update({
@@ -73,8 +73,6 @@ router.post('/', upload.none(), async (req, res, next) => {
         }
         else if (forced) {
           refreshPredictedLocations(id, data, () => {
-            updatedList.push(id);
-            console.log(id, docsLeft);
             if (--docsLeft === 0) {
               resolve(updatedList);
             }
