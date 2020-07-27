@@ -17,7 +17,12 @@ router.get('/', async (req, res, next) => {
     // Get tumbleweeds from firestore.
     fb.firestore.collection('tumbleweeds').get().then(snapshot => {
       let found = [];
-      snapshot.forEach(doc => found.push(doc.data()));  // snapshot.map() doesn't exist. Using forEach() instead.
+      snapshot.forEach(docRef => {  // snapshot.map() doesn't exist. Using forEach() instead.
+        found.push({
+          ...{ _id: docRef.id },
+          ...docRef.data()
+        })
+      });
       // Finished.
       resolve(found);
     });
