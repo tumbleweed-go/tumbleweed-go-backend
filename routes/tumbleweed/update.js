@@ -7,7 +7,7 @@ const logger = require('./../../utils/log');
 const funcs = require('./../../utils/funcs');
 const upload = multer();
 
-const updateTumbleweedLocation = async (id, data, callback) => {
+const moveTumbleweed = async (id, data, callback) => {
   // Get new location and new predicted locations.
   let newLocation = data.location;
   if (data.predictedLocations.length >= 1) {
@@ -26,7 +26,7 @@ const updateTumbleweedLocation = async (id, data, callback) => {
   });
 }
 
-const refreshPredictedLocations = async (id, data, callback) => {
+const refreshTumbleweed = async (id, data, callback) => {
   // Get new predicted locations.
   let predictedLocations = await funcs.getPredictedLocations(data.location._latitude, data.location._longitude);
   // Update tumbleweed in database.
@@ -64,7 +64,7 @@ router.post('/', upload.none(), async (req, res, next) => {
         let dayElapsedTime = 1000 * 60 * 60 * 24;
         // Update at most every 24 hrs.
         if (updateElapsed > dayElapsedTime) {
-          updateTumbleweedLocation(id, data, () => {
+          moveTumbleweed(id, data, () => {
             updatedList.push(id);
             if (--docsLeft === 0) {
               resolve(updatedList);
@@ -72,7 +72,7 @@ router.post('/', upload.none(), async (req, res, next) => {
           });
         }
         else if (forced) {
-          refreshPredictedLocations(id, data, () => {
+          refreshTumbleweed(id, data, () => {
             if (--docsLeft === 0) {
               resolve(updatedList);
             }
