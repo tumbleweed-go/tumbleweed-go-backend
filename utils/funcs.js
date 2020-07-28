@@ -43,7 +43,7 @@ const getPredictedLocations = async (latitude, longitude) => {
   return array;
 }
 
-const getNextPredictedLocation = (locations, period, latitude, longitude, callback = (() => {})) => {
+const getNextPredictedLocation = (locations, period, latitude, longitude, callback) => {
 
   if (period >= 14) { // Get locations for next 7 days.
     callback();

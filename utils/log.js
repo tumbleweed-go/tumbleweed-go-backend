@@ -15,7 +15,7 @@ const log = (path, msg) => {
     time: firebase.firestore.FieldValue.serverTimestamp(),
     path: path,
     message: msg
-  });
+  }).catch(() => {});
 }
 
 module.exports = {log};

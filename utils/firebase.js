@@ -9,12 +9,17 @@ firebase.initializeApp({
 let firestore = firebase.firestore();
 let auth = firebase.auth();
 
-const getTumbleweedById = (id, callback = (() => {}), failCallback = (() => {})) => {
+const getTumbleweedById = (id, callback, failCallback) => {
+  //console.log('get tumbleweed by id: ' + id);
   firestore.collection('tumbleweeds').where('__name__', '==', id).get().then((querySnapshot) => {
-    querySnapshot.forEach(doc => {    // Should only run once.
-      callback(doc);
-    });
-    failCallback();  // Runs if no querySnapshot.
+    if (querySnapshot.size === 0) {
+      failCallback();
+    }
+    else {
+      querySnapshot.forEach(doc => {    // Should only run once.
+        callback(doc);
+      });
+    }
   });
 }
 

@@ -26,10 +26,10 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
   
   // Validate file input.
   if (!req.files) {
-    return res.status(500).json({ result: 'Missing req.files' });
+    return res.status(500).json({ result: 'Missing req.files.' });
   }
   if (!req.files.image) {
-    return res.status(400).json({ result: 'Missing image' });
+    return res.status(400).json({ result: 'Missing image.' });
   }
 
   // Parse input from req.params.
@@ -63,34 +63,47 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
 
   // UPLOAD COORDINATES
 
-  let promise = new Promise(resolve => {
+  let tumbleweedObj = {
+    uploadTime: Date.now(),
+    uploadLocation: new firebase.firestore.GeoPoint(latitude, longitude),
+    location: new firebase.firestore.GeoPoint(latitude, longitude),
+    lastUpdateTime: Date.now(),
+    predictedLocations: []  // Will be updated right after returning request.
+  }
+
+  let promise = new Promise((resolve, reject) => {
     // Add tumbleweed to firestore.
-    fb.firestore.collection('tumbleweeds').add({
-      uploadTime: Date.now(),
-      uploadLocation: new firebase.firestore.GeoPoint(latitude, longitude),
-      location: new firebase.firestore.GeoPoint(latitude, longitude),
-      lastUpdateTime: Date.now(),
-      predictedLocations: []  // Will be updated right after returning request.
-    }).then(docRef => {
-      // Finished. Resolve with added element's id.
+    fb.firestore.collection('tumbleweeds').add(tumbleweedObj).then(docRef => {
+      // Add tumbleweed success.
       resolve(docRef.id);
+    }).catch(() => {
+      // Add tumbleweed failed.
+      reject();
     });
   });
 
   await promise.then(async (id) => {
-    // Tumbleweed added. DO NOT end function at this point.
-    logger.log('/tumbleweed/upload', `Uploaded tumbleweed: ${id}`);
-    res.status(200).json({ result: 'Tumbleweed added successfully.' });
-
+    // Add tumbleweed success.
+    logger.log('/tumbleweed/upload', `Uploaded tumbleweed: ${id}.`);
+    res.status(200).json({ result: 'Tumbleweed uploaded successfully.' });
     // Update tumbleweed predictions.
     let predictedLocations = await funcs.getPredictedLocations(latitude, longitude);
     fb.getTumbleweedById(id, doc => {
-      doc.ref.update({
-        predictedLocations: predictedLocations
-      }).then(() => {
-        logger.log('/tumbleweed/upload', `Updated tumbleweed predicted locations: ${id}`);
+      doc.ref.update({ predictedLocations: predictedLocations }).then(() => {
+        // Update tumbleweed success.
+        logger.log('/tumbleweed/upload', `Updated tumbleweed predicted locations: ${id}.`);
+      }).catch(() => {
+        // Update tumbleweed failed.
+        logger.log('/tumbleweed/upload', 'Error updating tumbleweed predicted locations.');
       });
+    }, () => {
+      // Get tumbleweed failed.
+      logger.log('/tumbleweed/upload', 'Error updating tumbleweed predicted locations.');
     });
+  }).catch(() => {
+    // Add tumbleweed failed.
+    logger.log('/tumbleweed/upload', 'Error uploading tumbleweed.');
+    res.status(500).send({ result: 'Error uploading tumbleweed.' });
   });
 });
 

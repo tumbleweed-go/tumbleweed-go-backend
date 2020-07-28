@@ -8,6 +8,7 @@ let indexRouter = require('./routes/index');
 let tumbleweedUploadRouter = require('./routes/tumbleweed/upload');
 let tumbleweedGetRouter = require('./routes/tumbleweed/get');
 let tumbleweedUpdateRouter = require('./routes/tumbleweed/update');
+let tumbleweedDeleteRouter = require('./routes/tumbleweed/delete');
 
 var app = express();
 
@@ -25,6 +26,7 @@ app.use('/', indexRouter);
 app.use('/tumbleweed/upload', tumbleweedUploadRouter);
 app.use('/tumbleweed/get', tumbleweedGetRouter);
 app.use('/tumbleweed/update', tumbleweedUpdateRouter);
+app.use('/tumbleweed/delete', tumbleweedDeleteRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

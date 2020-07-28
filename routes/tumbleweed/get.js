@@ -13,7 +13,7 @@ router.use((req, res, next) => {
 
 router.get('/', async (req, res, next) => {
 
-  let promise = new Promise(resolve => {
+  let promise = new Promise((resolve, reject) => {
     // Get tumbleweeds from firestore.
     fb.firestore.collection('tumbleweeds').get().then(snapshot => {
       let found = [];
@@ -25,12 +25,19 @@ router.get('/', async (req, res, next) => {
       });
       // Finished.
       resolve(found);
+    }).catch(() => {
+      reject();
     });
   });
 
   await promise.then(found => {
-    logger.log('/tumbleweed/get', `Retrieved tumbleweeds`);
+    // Get tumbleweed success.
+    logger.log('/tumbleweed/get', 'Retrieved tumbleweeds.');
     res.status(200).send({ result: found });
+  }).catch(() => {
+    // Get tumbleweed fail.
+    logger.log('/tumbleweed/get', 'Error getting tumbleweeds.');
+    res.status(200).send({ result: 'Error getting tumbleweeds.' });
   });
 });
 
