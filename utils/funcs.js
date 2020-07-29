@@ -56,8 +56,11 @@ const getNextPredictedLocation = (locations, period, latitude, longitude, callba
     let endpoint = res.data.properties.forecast;
     let attempt = new Promise((resolve, reject) => {
       axios.get(endpoint).then(res => resolve(res.data)).catch(() => {
+        console.log('fetch data - fail #1');
         axios.get(endpoint).then(res => resolve(res.data)).catch(() => {
+          console.log('fetch data - fail #2');
           axios.get(endpoint).then(res => resolve(res.data)).catch(() => {
+            console.log('fetch data - fail #3');
             reject();
           });
         });
@@ -66,6 +69,7 @@ const getNextPredictedLocation = (locations, period, latitude, longitude, callba
 
     await attempt.then(res => {
 
+      console.log(latitude, longitude);
       let todayData = res.properties.periods[period];
       let windSpeedNumberMatches = todayData.windSpeed.match(/[\d.]+/g);
       

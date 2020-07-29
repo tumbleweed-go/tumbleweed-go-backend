@@ -89,6 +89,7 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
     // Update tumbleweed predictions.
     let predictedLocations = await funcs.getPredictedLocations(latitude, longitude);
     fb.getTumbleweedById(id, doc => {
+      // Get tumbleweed success.
       doc.ref.update({ predictedLocations: predictedLocations }).then(() => {
         // Update tumbleweed success.
         logger.log('/tumbleweed/upload', `Updated tumbleweed predicted locations: ${id}.`);
