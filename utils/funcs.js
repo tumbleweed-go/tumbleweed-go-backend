@@ -3,6 +3,8 @@ const firebase = require('firebase-admin');
 const vision = require('@google-cloud/vision');
 const colorsys = require('colorsys');
 
+const fb = require('./firebase');
+
 const directionAngles = {
   E:   Math.PI * 0 / 8,
   ENE: Math.PI * 1 / 8,
@@ -147,4 +149,39 @@ const isATumbleweed = async (imgDir) => {
   return isPlant && correctColour;
 }
 
-module.exports = { getPredictedLocations, isATumbleweed, padNumber };
+const incrementTumbleweedsFound = (uid, callback, failCallback) => {
+  // Get user.
+  fb.getObjectById('users', uid, doc => {
+    // Get user success.
+    // Update user.
+    doc.ref.update({
+      tumbleweedsFound: firebase.firestore.FieldValue.increment(1)
+    }).then(() => {
+      // Update user success.
+      callback();
+    }).catch(() => {
+      // Update user fail.
+      failCallback();
+    });
+  }, err => {
+    // Get user fail.
+    if (err === 'no-object') {
+      // Create object.
+      fb.firestore.collection('users').doc(uid).set({
+        tumbleweedsFound: 1,
+      }).then(() => {
+        // Create object success.
+        callback();
+      }).catch(() => {
+        // Create object fail.
+        failCallback();
+      });
+    }
+    else {
+      // Get user fail.
+      failCallback();
+    }
+  });
+}
+
+module.exports = { getPredictedLocations, isATumbleweed, incrementTumbleweedsFound, padNumber };

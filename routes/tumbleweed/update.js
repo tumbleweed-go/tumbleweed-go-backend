@@ -15,7 +15,7 @@ const moveTumbleweed = async (id, data, callback, failCallback) => {
   }
   let predictedLocations = await funcs.getPredictedLocations(newLocation._latitude, newLocation._longitude);
   // Update tumbleweed in database.
-  fb.getTumbleweedById(id, doc => {
+  fb.getObjectById('tumbleweeds', id, doc => {
     // Get Tumbleweed success.
     doc.ref.update({
       location: newLocation,
@@ -38,7 +38,7 @@ const refreshTumbleweed = async (id, data, callback, failCallback) => {
   // Get new predicted locations.
   let predictedLocations = await funcs.getPredictedLocations(data.location._latitude, data.location._longitude);
   // Update tumbleweed in database.
-  fb.getTumbleweedById(id, doc => {
+  fb.getObjectById('tumbleweeds', id, doc => {
     // Get Tumbleweed success.
     doc.ref.update({
       predictedLocations: predictedLocations,

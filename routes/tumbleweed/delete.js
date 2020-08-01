@@ -26,7 +26,7 @@ router.post('/', upload.none(), async (req, res, next) => {
   let deleteId = req.body.id;
 
   let promise = new Promise((resolve, reject) => {
-    fb.getTumbleweedById(deleteId, () => {
+    fb.getObjectById('tumbleweeds', deleteId, () => {
       // Find tumbleweed success.
       fb.firestore.collection('tumbleweeds').doc(deleteId).delete().then(() => {
         // Delete tumbleweed success.

@@ -22,6 +22,8 @@ router.use((req, res, next) => {
 
 router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, res, next) => {
 
+  let uid = null;
+
   // INPUT
   
   // Validate file input.
@@ -30,6 +32,14 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
   }
   if (!req.files.image) {
     return res.status(400).json({ result: 'Missing image.' });
+  }
+
+  // Validate (optional) user token.
+  if (req.body && req.body.token) {
+    uid = await fb.getUserByToken(req.body.token);
+    if (!uid) {
+      return res.status(400).json({ result: 'Invalid access token.' });
+    }
   }
 
   // Parse input from req.params.
@@ -75,9 +85,20 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
     // Add tumbleweed to firestore.
     fb.firestore.collection('tumbleweeds').add(tumbleweedObj).then(docRef => {
       // Add tumbleweed success.
-      resolve(docRef.id);
+      // Resolve if no user.
+      if (!uid) {
+        resolve(docRef.id);
+      }
+      // Update user score.
+      funcs.incrementTumbleweedsFound(uid, () => {
+        // Update user score success.
+        resolve(docRef.id);
+      }, () => {
+        // Update user score fail.
+        reject();
+      });
     }).catch(() => {
-      // Add tumbleweed failed.
+      // Add tumbleweed fail.
       reject();
     });
   });
@@ -88,7 +109,7 @@ router.post('/:latitude/:longitude', upload.fields(uploadFields), async (req, re
     res.status(200).json({ result: 'Tumbleweed uploaded successfully.' });
     // Update tumbleweed predictions.
     let predictedLocations = await funcs.getPredictedLocations(latitude, longitude);
-    fb.getTumbleweedById(id, doc => {
+    fb.getObjectById('tumbleweeds', id, doc => {
       // Get tumbleweed success.
       doc.ref.update({ predictedLocations: predictedLocations }).then(() => {
         // Update tumbleweed success.

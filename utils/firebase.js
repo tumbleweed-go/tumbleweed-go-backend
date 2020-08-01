@@ -9,18 +9,42 @@ firebase.initializeApp({
 let firestore = firebase.firestore();
 let auth = firebase.auth();
 
-const getTumbleweedById = (id, callback, failCallback) => {
-  //console.log('get tumbleweed by id: ' + id);
-  firestore.collection('tumbleweeds').where('__name__', '==', id).get().then((querySnapshot) => {
-    if (querySnapshot.size === 0) {
-      failCallback();
+const getUserByToken = async (token) => {
+
+  let uid = null;
+  let promise = new Promise(resolve => {
+    auth.verifyIdToken(token).then(decodedToken => {
+      // User exists.
+      uid = decodedToken.uid;
+      resolve();
+    }).catch(() => {
+      // User doesn't exist.
+      // Keep uid as null.
+      resolve();
+    });
+  });
+
+  await promise;
+  return uid;
+}
+
+const getObjectById = (collection, id, callback, failCallback) => {
+  firestore.collection(collection).where('__name__', '==', id).get().then(snapshot => {
+    // Get object success.
+    if (snapshot.size === 0) {
+      // Tumbleweed doesn't exist.
+      failCallback('no-object');
     }
     else {
-      querySnapshot.forEach(doc => {    // Should only run once.
-        callback(doc);
+      // Tubleweed exists.
+      snapshot.forEach(docRef => {    // Should only run once.
+        callback(docRef);
       });
     }
+  }).catch(() => {
+    // Get object fail.
+    failCallback('no-connection');
   });
 }
 
-module.exports = { firestore, auth, getTumbleweedById };
+module.exports = { firestore, auth, getUserByToken, getObjectById };
