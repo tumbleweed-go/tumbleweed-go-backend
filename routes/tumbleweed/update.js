@@ -55,16 +55,7 @@ const refreshTumbleweed = async (id, data, callback, failCallback) => {
   });
 }
 
-// Enable CORS.
-router.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-});
-
-router.post('/', upload.none(), async (req, res, next) => {
-
-  let forced = (req.body && req.body.forced === 'true') ? true : false;
+const update = async (res, forced) => {
 
   let promise = new Promise((resolve, reject) => {
     let updatedList = [];
@@ -124,6 +115,22 @@ router.post('/', upload.none(), async (req, res, next) => {
     logger.log('/tumbleweed/update', 'Error updating tumbleweeds.');
     res.status(500).send({ result: 'Error updating tumbleweeds.' });
   });
+}
+
+// Enable CORS.
+router.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
+router.post('/', upload.none(), (req, res, next) => {
+  let forced = (req.body && req.body.forced === 'true') ? true : false;
+  update(res, forced);
+});
+
+router.post('/force', upload.none(), (req, res, next) => {
+  update(res, true);
 });
 
 module.exports = router;
